@@ -4,7 +4,7 @@ image_resource:
   type: docker-image
   source:
     repository: openjdk
-    tag: '8-jdk-alpine'
+    tag: '8-jdk'
 
 inputs:
   - name: pal-tracker
@@ -18,6 +18,19 @@ run:
   args:
   - -exc
   - |
+    stop_mysql() {
+      service mysql stop
+    }
+    trap stop_mysql EXIT
+
+    export DEBIAN_FRONTEND="noninteractive"
+
+    apt-get update && \
+    apt-get -y install mariadb-server
+    service mysql start
+
     cd pal-tracker
-    ./gradlew -P version=`cat ../version/number` build
+
+    mysql -uroot < databases/tracker/create_database.sql
+    ./gradlew -P version=`cat ../version/number` testMigrate build
     cp build/libs/pal-tracker-*.jar ../build-output

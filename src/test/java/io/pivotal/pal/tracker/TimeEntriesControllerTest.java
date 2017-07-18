@@ -2,6 +2,8 @@ package io.pivotal.pal.tracker;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.boot.actuate.metrics.CounterService;
+import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -9,17 +11,27 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TimeEntriesControllerTest {
     private MockMvc mockMvc;
+    private CounterService counterService;
+    private GaugeService gaugeService;
 
     @Before
     public void beforeEach() {
         TimeEntryRepository repository = new InMemoryTimeEntryRepository();
-        TimeEntriesController controller = new TimeEntriesController(repository);
+        counterService = mock(CounterService.class);
+        gaugeService = mock(GaugeService.class);
+
+        TimeEntriesController controller = new TimeEntriesController(
+                repository,
+                counterService,
+                gaugeService);
 
         List<TimeEntry> entries = Arrays.asList(
                 new TimeEntry(23L, 5L, 42L, "date", 123),
@@ -39,6 +51,9 @@ public class TimeEntriesControllerTest {
         mockMvc.perform(get("/timeEntries"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(jsonList));
+
+        verify(counterService).increment("list");
+        verify(gaugeService).submit("timeEntries", 3d);
     }
 
     @Test
@@ -46,12 +61,16 @@ public class TimeEntriesControllerTest {
         mockMvc.perform(get("/timeEntries/23"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(jsonEntry23));
+
+        verify(counterService).increment("get");
     }
 
     @Test
     public void get_invalidId_notFound() throws Exception {
         mockMvc.perform(get("/timeEntries/9000"))
                 .andExpect(status().isNotFound());
+
+        verify(counterService).increment("get");
     }
 
     @Test
@@ -61,6 +80,8 @@ public class TimeEntriesControllerTest {
                 .content(createJson))
                 .andExpect(status().isCreated())
                 .andExpect(content().json(jsonEntry26));
+
+        verify(counterService).increment("create");
     }
 
     @Test
@@ -73,6 +94,8 @@ public class TimeEntriesControllerTest {
         mockMvc.perform(get("/timeEntries/23"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(putJson));
+
+        verify(counterService).increment("update");
     }
 
     @Test
@@ -81,6 +104,8 @@ public class TimeEntriesControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(putJson))
                 .andExpect(status().isBadRequest());
+
+        verify(counterService).increment("update");
     }
 
     @Test
@@ -89,12 +114,16 @@ public class TimeEntriesControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(putJson9000))
                 .andExpect(status().isNotFound());
+
+        verify(counterService).increment("update");
     }
 
     @Test
     public void delete_deletes() throws Exception {
         mockMvc.perform(delete("/timeEntries/23"))
                 .andExpect(status().isNoContent());
+
+        verify(counterService).increment("delete");
 
         mockMvc.perform(get("/timeEntries/23"))
                 .andExpect(status().isNotFound());

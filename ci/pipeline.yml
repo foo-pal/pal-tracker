@@ -31,6 +31,7 @@ resources:
     password: {{deploy-password}}
     organization: {{deploy-org}}
     space: review
+    skip_cert_check: true
 
 - name: production-deployment
   type: cf
@@ -40,6 +41,7 @@ resources:
     password: {{deploy-password}}
     organization: {{deploy-org}}
     space: production
+    skip_cert_check: true
 
 jobs:
 - name: build

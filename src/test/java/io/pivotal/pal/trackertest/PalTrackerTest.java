@@ -34,6 +34,8 @@ public class PalTrackerTest {
 
     @Before
     public void beforeEach() {
+        restTemplate = restTemplate.withBasicAuth("user", "password");
+
         jdbcTemplate.execute("TRUNCATE time_entries");
     }
 

@@ -26,11 +26,17 @@ repositories {
 def development_db_url = "jdbc:mariadb://localhost:3306/tracker_dev?user=tracker"
 bootRun.environment([
         "SPRING_DATASOURCE_URL": development_db_url,
+        "SECURITY_USER_NAME": "user",
+        "SECURITY_USER_PASSWORD": "password",
+        "SECURITY_ENABLE_CSRF": "false"
 ])
 
 def test_db_url = "jdbc:mariadb://localhost:3306/tracker_test?user=tracker"
 test.environment([
         "SPRING_DATASOURCE_URL": test_db_url,
+        "SECURITY_USER_NAME": "user",
+        "SECURITY_USER_PASSWORD": "password",
+        "SECURITY_ENABLE_CSRF": "false"
 ])
 
 import org.flywaydb.gradle.task.FlywayMigrateTask
@@ -51,6 +57,8 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile("org.mariadb.jdbc:mariadb-java-client:2.0.2")
     compile("org.springframework.boot:spring-boot-starter-actuator")
+    compile("org.springframework.boot:spring-boot-starter-security")
+    compile("org.springframework.boot:spring-boot-devtools")
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }

@@ -3,3 +3,6 @@ applications:
 - name: pal-tracker-review
   path: ../../build/libs/pal-tracker.jar
   host: pal-tracker-afleig-review
+  env:
+    SECURITY_ENABLE_CSRF: false
+    SECURITY_REQUIRE_SSL: true
